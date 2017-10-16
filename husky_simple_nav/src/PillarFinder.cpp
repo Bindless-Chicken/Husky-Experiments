@@ -17,15 +17,9 @@ void PillarFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     geometry_msgs::Twist twistInfo;
 
-    // TODO: Something a bit nicer
     twistInfo.linear.x = 2;
+    twistInfo.angular.z = atan2(hitLocation.y, hitLocation.x);
 
-    if(hitLocation.y > 0) {
-        twistInfo.angular.z = 1;
-    }
-    else {
-        twistInfo.angular.z = -1;
-    }
     PubHusky.publish(twistInfo);
 }
 
