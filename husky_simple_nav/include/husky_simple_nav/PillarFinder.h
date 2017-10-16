@@ -16,7 +16,6 @@ public:
 protected:
     uint16_t GetClosestLaser(const sensor_msgs::LaserScan::ConstPtr& msg);
     geometry_msgs::Vector3 ExtractLaserHitLocation(const double range, const double angle);
-    void PublishMarker(const geometry_msgs::Vector3& location);
 
     ros::Publisher PubHusky;    // Publisher used to send husky movements info
     ros::Publisher PubRViz;     // Publisher used to send markers to RViz
