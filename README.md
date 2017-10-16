@@ -28,3 +28,13 @@ Drive inside a corridor with two defined borders.
 - [ ] Drive in the center of the corridor
 - [ ] Handle corners
 - [ ] Gracefully handle end of tracks by turning back
+
+## Camera Process
+
+Attach a camera to the husky and drive towards an object of color.
+
+### Goals
+
+- [ ] Retrieve a camera feed
+- [ ] Find an object of color
+- [ ] Drive toward the colored object
