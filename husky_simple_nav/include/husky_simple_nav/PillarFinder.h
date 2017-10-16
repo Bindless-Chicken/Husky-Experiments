@@ -9,7 +9,7 @@
 
 class PillarFinder {
 public:
-    PillarFinder(const ros::Publisher &pubHusky, const ros::Publisher &pubRViz);
+    PillarFinder(const ros::Publisher &pubHusky, const ros::Publisher &pubEmer);
 
     void Monitor(const sensor_msgs::LaserScan::ConstPtr& msg);
 
@@ -18,9 +18,11 @@ protected:
     geometry_msgs::Vector3 ExtractLaserHitLocation(const double range, const double angle);
 
     ros::Publisher PubHusky;    // Publisher used to send husky movements info
-    ros::Publisher PubRViz;     // Publisher used to send markers to RViz
+    ros::Publisher PubEmer;     // Publisher used to send emergency stop info
 
     tf2_ros::Buffer tfBuffer;
     std::string TopicName;
     double queueSize;
+
+    const double EmergencyDistance = 1;   // Distance at which the emergency stop is triggered
 };

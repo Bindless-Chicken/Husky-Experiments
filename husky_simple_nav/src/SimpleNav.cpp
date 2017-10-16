@@ -2,8 +2,11 @@
 #include <sensor_msgs/LaserScan.h>
 
 #include "husky_simple_nav/PillarFinder.h"
+#include "husky_simple_nav/EmergencyStop.h"
 
 #define PKG_NAMESPACE "/husky_simple_nav/"
+
+using husky_simple_nav::EmergencyStop;
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "husky_simple_nav");
@@ -23,10 +26,10 @@ int main(int argc, char** argv) {
     ros::Publisher pubHusky = nh.advertise<geometry_msgs::Twist>("/husky_velocity_controller/cmd_vel", 1);
 
     // Create the publisher to send marker info to RViz
-    ros::Publisher pubRViz = nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
+    ros::Publisher pubEmer = nh.advertise<EmergencyStop>("emergency_stop", 0);
 
     // Create the pillar finder
-    PillarFinder finder(pubHusky, pubRViz);
+    PillarFinder finder(pubHusky, pubEmer);
 
     // Create the subscriber
     ros::Subscriber sub = nh.subscribe(topicName, queueSize, &PillarFinder::Monitor, &finder);

@@ -1,25 +1,43 @@
 #include "husky_simple_nav/PillarFinder.h"
+#include "husky_simple_nav/EmergencyStop.h"
 #include <math.h>
 
-PillarFinder::PillarFinder(const ros::Publisher &pubHusky, const ros::Publisher &pubRViz):
+using husky_simple_nav::EmergencyStop;
+
+PillarFinder::PillarFinder(const ros::Publisher &pubHusky, const ros::Publisher &pubEmer):
     PubHusky(pubHusky),
-    PubRViz(pubRViz)
+    PubEmer(pubEmer)
 {
 }
 
 void PillarFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     uint16_t rangeID = GetClosestLaser(msg);
 
-    // Get the angle between laser and closest hit
-    double hitAngle = msg->angle_min + (rangeID * msg->angle_increment);
-
-    geometry_msgs::Vector3 hitLocation = ExtractLaserHitLocation(msg->ranges[rangeID], hitAngle);
-
+    // Prepare the two messages
     geometry_msgs::Twist twistInfo;
+    EmergencyStop stopMessage;
 
-    twistInfo.linear.x = 2;
-    twistInfo.angular.z = atan2(hitLocation.y, hitLocation.x);
+    // Check if the robot is too close
+    if(msg->ranges[rangeID] > EmergencyDistance) {
+        // Get the angle between laser and closest hit
+        double hitAngle = msg->angle_min + (rangeID * msg->angle_increment);
 
+        geometry_msgs::Vector3 hitLocation = ExtractLaserHitLocation(msg->ranges[rangeID], hitAngle);
+
+        twistInfo.linear.x = 2;
+        twistInfo.angular.z = atan2(hitLocation.y, hitLocation.x);
+
+        stopMessage.emergency_stop = false;
+    }
+    else {
+        // Stop the robot
+        twistInfo.linear.x = 0;
+        twistInfo.angular.z = 0;
+
+        stopMessage.emergency_stop = true;
+    }
+
+    PubEmer.publish(stopMessage);
     PubHusky.publish(twistInfo);
 }
 

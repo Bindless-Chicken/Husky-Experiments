@@ -17,7 +17,7 @@ The simple nav package is a simple experiment at trying to find an object using 
 - [X] Moving Husky
 - [X] Extract Laser info
 - [X] Extract closest and drive towards it
-- [ ] Emergency stop when in close proximity
+- [X] Emergency stop when in close proximity
 
 ## Tunnel Nav
 
