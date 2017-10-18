@@ -9,6 +9,20 @@ CorridorFinder::CorridorFinder(const ros::Publisher &pubMarker):
 {
 }
 
+struct CloseInfo{
+    Point p1, p2;
+    uint close;
+};
+
+bool cmpClose(const CloseInfo &a, const CloseInfo &b)
+{
+    return a.close > b.close;
+}
+
+void ExtractLine(const std::vector<Point> &pointList) {
+    uint iteration = 8;
+}
+
 void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     // Take the first laser point
     //      Compute distance of all points to the line between first and second
@@ -32,7 +46,7 @@ void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     }
 
     // Compare points to line
-    std::vector<uint> closeList;
+    std::vector<CloseInfo> closeList;
     for(uint i = 0; i < pointList.size(); ++i) {
         for(uint j = i+1; j < pointList.size(); ++j) {
             uint close = 0;
@@ -44,15 +58,20 @@ void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
                 if(distance < 1) {
                     close++;
+                    // ROS_INFO_STREAM("CloseList [" << k << "] - " << distance);
                 }
+            
             }
-
-            closeList.push_back(close);
+            CloseInfo tempInfo;
+            tempInfo.p1 = pointList[i];
+            tempInfo.p2 = pointList[j];
+            tempInfo.close = close;
+            closeList.push_back(tempInfo);
         }
     }
 
     // Sort the close list
-    std::sort(closeList.begin(), closeList.end());
+    std::sort(closeList.begin(), closeList.end(), cmpClose);
 
     // Draw the first two
     visualization_msgs::Marker line_strip, points;
@@ -65,7 +84,7 @@ void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     line_strip.id = 2;
     points.id =  0;
 
-    line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+    line_strip.type = visualization_msgs::Marker::LINE_LIST;
     points.type = visualization_msgs::Marker::POINTS;
 
     line_strip.scale.x = 0.1;
@@ -81,8 +100,15 @@ void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
     points.points = pointList;
 
-    line_strip.points.push_back(pointList[0]);
-    line_strip.points.push_back(pointList[150]);
+    ROS_INFO_STREAM("CloseList [0] - " << closeList[0].close);
+    ROS_INFO_STREAM("CloseList [1] - " << closeList[1].close);
+
+    line_strip.points.push_back(closeList[0].p1);
+    line_strip.points.push_back(closeList[0].p2);
+
+
+    line_strip.points.push_back(closeList[1].p1);
+    line_strip.points.push_back(closeList[1].p2);
 
     if(!PubMarker) {
         ROS_WARN("Publisher invalid!");
