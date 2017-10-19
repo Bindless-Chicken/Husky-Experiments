@@ -6,7 +6,7 @@
 
 struct Line {
     double a, b;                    // Line parameters in 2D space
-    std::vector<geometry_msgs::Point> FittedPoints;
+    std::vector<uint> FittedPoints;
 };
 
 class RANSAC {
@@ -30,7 +30,7 @@ protected:
     );
 
     // Find the line fitting to a maximum of inputs
-    Line LinearLeastSquare(const std::vector<geometry_msgs::Point> &selection);
+    Line LinearLeastSquare(const std::vector<uint> &selection);
 
     // Compute the distance from a point to a line
     double DistanceToLine(
@@ -49,9 +49,9 @@ protected:
     std::string LaserFrame;
 
     const uint ITERATIONS = 30;
-    const uint SAMPLE_SIZE = 20;
-    const uint TOLERANCE = 1;
-    const uint NB_LINES = 2;
+    const uint SAMPLE_SIZE = 10;
+    const double TOLERANCE = 0.1;
+    const uint NB_LINES = 4;
     const bool PUBLISH_LINES = true;
     const bool PUBLISH_POINTS = false;
 };
