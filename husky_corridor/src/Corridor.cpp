@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     RANSAC ransac(pubLines, pubMarker);
 
     // Create the behaviour node
-    CorridorFinder finder(pubHusky);
+    CorridorFinder finder(pubHusky, pubMarker);
 
     // Create the subscribers
     ros::Subscriber sub = nh.subscribe("/scan", 10, &RANSAC::Monitor, &ransac);

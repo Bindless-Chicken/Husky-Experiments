@@ -5,11 +5,15 @@
 
 class CorridorFinder {
 public:
-    CorridorFinder(const ros::Publisher &pubHusky);
+    CorridorFinder(
+        const ros::Publisher &pubHusky,
+        const ros::Publisher &pubMarker
+    );
 
     void Monitor(const husky_corridor::Lines::ConstPtr& msg);
 
 protected:
     ros::Publisher PubHusky;   // Publisher used to send line marker
+    ros::Publisher PubMarker;
     tf2_ros::Buffer tfBuffer;
 };

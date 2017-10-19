@@ -25,7 +25,7 @@ Drive inside a corridor with two defined borders.
 
 ### Goals
 
-- [ ] Drive in the center of the corridor
+- [X] Drive in the center of the corridor
 - [ ] Handle corners
 - [ ] Gracefully handle end of tracks by turning back
 
