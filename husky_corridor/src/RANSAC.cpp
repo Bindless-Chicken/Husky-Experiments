@@ -32,6 +32,8 @@ void RANSAC::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
         msg->range_max
     );
 
+    ReduceDensity();
+
     // Do the RANSAC extraction
     std::vector<Line> lines;
     lines = RANSAC2DLine();
@@ -137,6 +139,29 @@ void RANSAC::RangeToCoordinates(
             tempPoint.y = std::sin(start + (increment * i))  * range;
 
             PointList.push_back(tempPoint);
+        }
+    }
+}
+
+#define SQR(x) ((x)*(x))
+
+void RANSAC::ReduceDensity() {
+    uint idOrig = 0;
+    for(uint i = 1; i < PointList.size(); ++i) {
+        Point orig = PointList[idOrig];
+        Point stud = PointList[i];
+
+        double distance = std::sqrt(
+            SQR(stud.x - orig.x) +
+            SQR(stud.y - orig.y)
+        );
+
+        if(distance < DENSITY)  {
+            PointList.erase(PointList.begin() + i);
+            --i;
+        }
+        else {
+            idOrig = i;
         }
     }
 }

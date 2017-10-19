@@ -34,7 +34,7 @@ void CorridorFinder::Monitor(const husky_corridor::Lines::ConstPtr& msg) {
 
         geometry_msgs::Twist twistInfo;
         twistInfo.linear.x = 0.5;
-        twistInfo.angular.z = (atan2(intersection.y, intersection.x)) / 2.0;
+        twistInfo.angular.z = (atan2(intersection.y, intersection.x)) / 5.0;
 
         PubHusky.publish(twistInfo);
     }

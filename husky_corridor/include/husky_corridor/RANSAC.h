@@ -29,6 +29,9 @@ protected:
         const double max
     );
 
+    // Remove close points to account for misleading high density near the sensor
+    void ReduceDensity();
+
     // Find the line fitting to a maximum of inputs
     Line LinearLeastSquare(const std::vector<uint> &selection);
 
@@ -48,9 +51,10 @@ protected:
     ros::Publisher PubLine, PubMarker;
     std::string LaserFrame;
 
-    const uint ITERATIONS = 200;
+    const uint ITERATIONS = 30;
     const uint SAMPLE_SIZE = 5;
     const double TOLERANCE = 0.3;
+    const double DENSITY = 0.3;
     double CONSENSUS;
     const uint NB_LINES = 4;
     const bool PUBLISH_LINES = true;
