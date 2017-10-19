@@ -171,12 +171,12 @@ void RANSAC::PublishLines(const std::vector<Line> &lines) {
 
     for(auto line: lines) {
         Point a;
-        a.x = line.FittedPoints.front().x;
-        a.y = line.FittedPoints.front().y;
+        a.x = 0;
+        a.y = line.b;
 
         Point b;
-        b.x = line.FittedPoints.back().x;
-        b.y = line.FittedPoints.back().y;
+        b.x = 10;
+        b.y = line.a * 10 + line.b;
 
         // ROS_INFO_STREAM("Location [" << a.x << ";" << a.y << " - " << b.x << ";" << b.y << "] for fitting: " << lines[0].FittedPoints.size());
 
