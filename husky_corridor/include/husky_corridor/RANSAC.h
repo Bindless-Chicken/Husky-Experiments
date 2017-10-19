@@ -11,7 +11,7 @@ struct Line {
 
 class RANSAC {
 public:
-    RANSAC(const ros::Publisher &pubLine);
+    RANSAC(const ros::Publisher &pubLine, const ros::Publisher &pubMarker);
 
     // Callback answering to a new message from the laser
     void Monitor(const sensor_msgs::LaserScan::ConstPtr& msg);
@@ -45,12 +45,13 @@ protected:
     void PublishPoints();
 
     std::vector<geometry_msgs::Point> PointList;    // In laser frame
-    ros::Publisher PubLine;
+    ros::Publisher PubLine, PubMarker;
     std::string LaserFrame;
 
-    const uint ITERATIONS = 30;
-    const uint SAMPLE_SIZE = 10;
-    const double TOLERANCE = 0.1;
+    const uint ITERATIONS = 200;
+    const uint SAMPLE_SIZE = 5;
+    const double TOLERANCE = 0.3;
+    double CONSENSUS;
     const uint NB_LINES = 4;
     const bool PUBLISH_LINES = true;
     const bool PUBLISH_POINTS = false;

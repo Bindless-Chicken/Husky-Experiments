@@ -3,6 +3,7 @@
 #include <chrono>
 #include <random>
 #include <visualization_msgs/Marker.h>
+#include "husky_corridor/Lines.h"
 
 using geometry_msgs::Point;
 
@@ -12,8 +13,9 @@ bool LineFittingCmp(const Line &a, const Line &b)
     return a.FittedPoints.size() < b.FittedPoints.size();
 }
 
-RANSAC::RANSAC(const ros::Publisher &pubLine) :
-    PubLine(pubLine)
+RANSAC::RANSAC(const ros::Publisher &pubLine, const ros::Publisher &pubMarker) :
+    PubLine(pubLine),
+    PubMarker(pubMarker)
 {
 }
 
@@ -34,6 +36,21 @@ void RANSAC::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     std::vector<Line> lines;
     lines = RANSAC2DLine();
 
+    husky_corridor::Lines tempLines;
+
+    for(auto line: lines) {
+        husky_corridor::Line tempLine;
+        tempLine.a = line.a;
+        tempLine.b = line.b;
+
+        tempLine.header.frame_id = LaserFrame;
+        tempLine.header.stamp = ros::Time::now();
+
+        tempLines.lines.push_back(tempLine);
+    }
+
+    PubLine.publish(tempLines);
+
     if(PUBLISH_LINES) {
         PublishLines(lines);
     }
@@ -45,8 +62,10 @@ void RANSAC::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 std::vector<Line> RANSAC::RANSAC2DLine() {
     std::vector<Line> lineList;
+    CONSENSUS = PointList.size()/4;
+
     for(uint i = 0; i < ITERATIONS; ++i) {
-        if(PointList.size() > 70) {
+        if(PointList.size() > CONSENSUS + 10) {
             std::vector<uint> selection;
             std::vector<uint> test;
 
@@ -74,7 +93,7 @@ std::vector<Line> RANSAC::RANSAC2DLine() {
 
 
             // Refine using fitted points
-            if(line.FittedPoints.size() > 60) {
+            if(line.FittedPoints.size() > CONSENSUS) {
                 Line line2 = LinearLeastSquare(line.FittedPoints);
                 line2.FittedPoints = line.FittedPoints;
 
@@ -196,7 +215,7 @@ void RANSAC::PublishLines(const std::vector<Line> &lines) {
         line_strip.points.push_back(b);
     }
 
-    PubLine.publish(line_strip);
+    PubMarker.publish(line_strip);
 }
 
 void RANSAC::PublishPoints() {
@@ -220,7 +239,7 @@ void RANSAC::PublishPoints() {
 
     points.points = PointList;
 
-    PubLine.publish(points);
+    PubMarker.publish(points);
 }
 
 std::vector<uint> GenerateRandomSequence(const uint length) {

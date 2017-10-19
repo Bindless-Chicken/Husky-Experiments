@@ -1,130 +1,41 @@
 #include "husky_corridor/CorridorFinder.h"
 #include <math.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Twist.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <geometry_msgs/TransformStamped.h>
 
 
 using geometry_msgs::Point;
 
-CorridorFinder::CorridorFinder(const ros::Publisher &pubMarker):
-    PubMarker(pubMarker)
+CorridorFinder::CorridorFinder(const ros::Publisher &pubHusky):
+    PubHusky(pubHusky)
 {
 }
 
-struct CloseInfo{
-    Point p1, p2;
-    uint close;
-};
+void CorridorFinder::Monitor(const husky_corridor::Lines::ConstPtr& msg) {
+    // Select the two first lines and find the intersection point
+    if(msg->lines.size() >= 2) {
+        geometry_msgs::Point intersection;
 
-bool cmpClose(const CloseInfo &a, const CloseInfo &b)
-{
-    return a.close > b.close;
-}
+        husky_corridor::Line l1 = msg->lines[0];
+        husky_corridor::Line l2 = msg->lines[1];
 
-void ExtractLine(const std::vector<Point> &pointList) {
-    uint iteration = 8;
-}
+        intersection.x = (l2.b - l1.b) / (l1.a - l2.a);
+        intersection.y = l1.a * intersection.x + l1.b;
 
-void CorridorFinder::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
-    // Take the first laser point
-    //      Compute distance of all points to the line between first and second
-    //      Add points within tolerance
-    //      Keep lines that with the most points
+        // tf2_ros::TransformListener tfListener(tfBuffer);
+        // geometry_msgs::TransformStamped ts;
+        // ts = tfBuffer.lookupTransform("base_link", "base_laser", ros::Time(0));
 
+        // intersection.x += ts.transform.translation.x;
+        intersection.y = -intersection.y /*+ ts.transform.translation.y*/;
 
-    std::vector<Point> pointList;
+        geometry_msgs::Twist twistInfo;
+        twistInfo.linear.x = 0.5;
+        twistInfo.angular.z = (atan2(intersection.y, intersection.x)) / 2.0;
 
-    // Fill the point array
-    for(uint i = 0; i < msg->ranges.size(); ++i) {
-        double range = msg->ranges[i];
-
-        if(range < msg->range_max && range > msg->range_min) {
-            Point tempPoint;
-            tempPoint.x = std::cos(msg->angle_min + (msg->angle_increment * i)) * range;
-            tempPoint.y = std::sin(msg->angle_min + (msg->angle_increment * i))  * range;
-
-            pointList.push_back(tempPoint);
-        }
+        PubHusky.publish(twistInfo);
     }
-
-    // Compare points to line
-    std::vector<CloseInfo> closeList;
-    for(uint i = 0; i < pointList.size(); ++i) {
-        for(uint j = i+1; j < pointList.size(); ++j) {
-            uint close = 0;
-
-            for(uint k = j+1; k < pointList.size(); ++k) {
-                double distance = PointLineDistance(pointList[i], pointList[j], pointList[k]);
-
-                // ROS_INFO_STREAM("Point " << k << " is " << distance << " to " << i << ";" << j);
-
-                if(distance < 1) {
-                    close++;
-                    // ROS_INFO_STREAM("CloseList [" << k << "] - " << distance);
-                }
-            
-            }
-            CloseInfo tempInfo;
-            tempInfo.p1 = pointList[i];
-            tempInfo.p2 = pointList[j];
-            tempInfo.close = close;
-            closeList.push_back(tempInfo);
-        }
-    }
-
-    // Sort the close list
-    std::sort(closeList.begin(), closeList.end(), cmpClose);
-
-    // Draw the first two
-    visualization_msgs::Marker line_strip, points;
-    line_strip.header.frame_id = points.header.frame_id = msg->header.frame_id;
-    line_strip.header.stamp = points.header.stamp = ros::Time::now();
-    line_strip.ns = "lines";
-    points.ns = "points";
-    line_strip.action = points.action = visualization_msgs::Marker::ADD;
-    line_strip.pose.orientation.w = points.pose.orientation.w = 1.0;
-    line_strip.id = 2;
-    points.id =  0;
-
-    line_strip.type = visualization_msgs::Marker::LINE_LIST;
-    points.type = visualization_msgs::Marker::POINTS;
-
-    line_strip.scale.x = 0.1;
-
-    points.scale.x = 0.2;
-    points.scale.y = 0.2;
-
-    line_strip.color.b = 1.0;
-    line_strip.color.a = 1.0;
-
-    points.color.g = 1.0;
-    points.color.a = 1.0;
-
-    points.points = pointList;
-
-    ROS_INFO_STREAM("CloseList [0] - " << closeList[0].close);
-    ROS_INFO_STREAM("CloseList [1] - " << closeList[1].close);
-
-    line_strip.points.push_back(closeList[0].p1);
-    line_strip.points.push_back(closeList[0].p2);
-
-
-    line_strip.points.push_back(closeList[1].p1);
-    line_strip.points.push_back(closeList[1].p2);
-
-    if(!PubMarker) {
-        ROS_WARN("Publisher invalid!");
-    }
-
-    PubMarker.publish(line_strip);
-    PubMarker.publish(points);
-}
-
-double CorridorFinder::PointLineDistance(const Point &p1, const Point &p2, const Point &p3) {
-    double dx = p2.x - p1.x;
-    double dy = p2.y - p1.y;
-
-    double distance = sqrt(dy * dy + dx * dx);
-
-    double top = abs((dy * p3.x) - (dx * p3.y) + (p2.x * p1.y) - (p2.y * p1.x));
-
-    return top / distance;
 }
