@@ -19,6 +19,7 @@ RANSAC::RANSAC(const ros::Publisher &pubLine) :
 
 void RANSAC::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     PointList.clear();
+    LaserFrame = msg->header.frame_id;
 
     // Convert the laser range to points
     RangeToCoordinates(
@@ -33,8 +34,12 @@ void RANSAC::Monitor(const sensor_msgs::LaserScan::ConstPtr& msg) {
     std::vector<Line> lines;
     lines = RANSAC2DLine();
 
-    if(PUBLISH_MARKERS) {
-        PublishPoints(lines);
+    if(PUBLISH_LINES) {
+        PublishLines(lines);
+    }
+
+    if(PUBLISH_POINTS) {
+        PublishPoints();
     }
 }
 
@@ -97,8 +102,8 @@ void RANSAC::RangeToCoordinates(
         // Check that the point is a valid scanner value
         if(range < max && range > min) {
             Point tempPoint;
-            tempPoint.x = std::cos(min + (increment * i)) * range;
-            tempPoint.y = std::sin(min + (increment * i))  * range;
+            tempPoint.x = std::cos(start + (increment * i)) * range;
+            tempPoint.y = std::sin(start + (increment * i))  * range;
 
             PointList.push_back(tempPoint);
         }
@@ -146,10 +151,10 @@ double RANSAC::DistanceToLine(
     return num / denum;
 }
 
-void RANSAC::PublishPoints(const std::vector<Line> &lines) {
+void RANSAC::PublishLines(const std::vector<Line> &lines) {
     visualization_msgs::Marker line_strip;
 
-    line_strip.header.frame_id = "base_laser";
+    line_strip.header.frame_id = LaserFrame;
     line_strip.header.stamp = ros::Time::now();
     line_strip.ns = "lines";
 
@@ -166,12 +171,12 @@ void RANSAC::PublishPoints(const std::vector<Line> &lines) {
 
     for(auto line: lines) {
         Point a;
-        a.x = 0;
-        a.y = 5 + (line.a * -5 + line.b);
+        a.x = line.FittedPoints.front().x;
+        a.y = line.FittedPoints.front().y;
 
         Point b;
-        b.x = 10;
-        b.y = 5 + (line.a * 5 + line.b);
+        b.x = line.FittedPoints.back().x;
+        b.y = line.FittedPoints.back().y;
 
         // ROS_INFO_STREAM("Location [" << a.x << ";" << a.y << " - " << b.x << ";" << b.y << "] for fitting: " << lines[0].FittedPoints.size());
 
@@ -180,6 +185,30 @@ void RANSAC::PublishPoints(const std::vector<Line> &lines) {
     }
 
     PubLine.publish(line_strip);
+}
+
+void RANSAC::PublishPoints() {
+    visualization_msgs::Marker points;
+
+    points.header.frame_id = LaserFrame;
+    points.header.stamp = ros::Time::now();
+    points.ns = "points";
+
+    points.action = visualization_msgs::Marker::ADD;
+    points.pose.orientation.w = 1.0;
+    points.id = 2;
+
+    points.type = visualization_msgs::Marker::POINTS;
+
+    points.scale.x = 0.2;
+    points.scale.y = 0.2;
+
+    points.color.b = 1.0;
+    points.color.a = 1.0;
+
+    points.points = PointList;
+
+    PubLine.publish(points);
 }
 
 std::vector<uint> GenerateRandomSequence(const uint length) {

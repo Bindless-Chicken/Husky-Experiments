@@ -2,6 +2,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Point.h>
 #include <vector>
+#include <string>
 
 struct Line {
     double a, b;                    // Line parameters in 2D space
@@ -38,16 +39,21 @@ protected:
     );
 
     // Publish the line markers for visualization
-    void PublishPoints(const std::vector<Line> &lines);
+    void PublishLines(const std::vector<Line> &lines);
+
+    // Publish the points under consideration
+    void PublishPoints();
 
     std::vector<geometry_msgs::Point> PointList;    // In laser frame
     ros::Publisher PubLine;
+    std::string LaserFrame;
 
     const uint ITERATIONS = 30;
     const uint SAMPLE_SIZE = 20;
-    const uint TOLERANCE = 2;
+    const uint TOLERANCE = 1;
     const uint NB_LINES = 2;
-    const bool PUBLISH_MARKERS = true;
+    const bool PUBLISH_LINES = true;
+    const bool PUBLISH_POINTS = false;
 };
 
 // Generate a random sequence between 0 and length
