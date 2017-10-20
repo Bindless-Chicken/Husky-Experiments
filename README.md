@@ -35,6 +35,6 @@ Attach a camera to the husky and drive towards an object of color.
 
 ### Goals
 
-- [ ] Retrieve a camera feed
+- [X] Retrieve a camera feed
 - [ ] Find an object of color
 - [ ] Drive toward the colored object
